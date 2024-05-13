@@ -1,19 +1,19 @@
 import torch
 from torch import nn
-import json
+# import json
 import math
 import matplotlib.pyplot as plt
 
 import neural_network
-import physics_loss
+# import physics_loss
 import solver
 import problem
 import solver
-import util_functions
+# import util_functions
 
 
 if  __name__ == "__main__":
-    network = neural_network.Approximator()
+    network = neural_network.Approximator(num_neurons=32)
     optimizer = torch.optim.Adam(network.parameters(), lr =0.003)
     loss = nn.MSELoss()
     
@@ -26,7 +26,7 @@ if  __name__ == "__main__":
     #     data = json.load(f)
     
     task = problem.Heat(alpha = 1, 
-                        initial_condition = lambda t, x: torch.pow(torch.sin(x*2*math.pi), 3), 
+                        initial_condition = lambda t, x: 3*torch.pow(torch.sin(x*2*math.pi), 3), 
                         left_boundary_condition = torch.vmap(lambda t, x: torch.tensor(0, dtype=torch.float32)), 
                         right_boundary_condition = torch.vmap(lambda t, x: torch.tensor(0, dtype=torch.float32)), 
                         left_x = 0, 
@@ -55,7 +55,7 @@ if  __name__ == "__main__":
     # for xs in ys_to_plot:
     #     line = axes.plot(x_train_1d, xs)
     #     # line[0].set_color(color)
-    axes.set_zlim(-1, 1)
+    # axes.set_zlim(-1, 1)
     # axes.set_ylim(-1, 1)
     plt.show()
     

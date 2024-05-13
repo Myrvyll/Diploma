@@ -57,7 +57,7 @@ class HeatSolver:
             left_loss = self.loss_for_sp(y_pred_left, self.y_train_left)
             right_loss = self.loss_for_sp(y_pred_right, self.y_train_right)
 
-            total_loss = phys_loss + init_loss + left_loss + right_loss
+            total_loss = phys_loss + 100*init_loss + left_loss + right_loss
             self.optimizer.zero_grad()
 
             total_loss.backward()
