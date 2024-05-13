@@ -61,6 +61,10 @@
               <input type="text"  name="right-boundary" class="form-control" placeholder="h(t, B)">
             </div>
         </div>
+
+        {% if error_presence %}
+        <p class="text-justify">{{error_text}}</p>
+        {% endif %}
         <button type="submit" class="btn btn-primary">Вирішити</button>
       </form>
     </div>

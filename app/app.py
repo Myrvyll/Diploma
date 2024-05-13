@@ -1,10 +1,9 @@
 from flask import Flask, render_template, request, redirect
-from .. import neural_network.util_functions
+import neural_network.util_functions as util_functions
+from ..neural_network import solver
+from ..neural_network import problem
 
 app = Flask(__name__)
-
-
-
 
 
 # ------------------------------
@@ -13,8 +12,13 @@ def get_input():
 
     if request.method == 'POST':
 
-        form_data = .get_attr_dictionary(request.form)
-        print(form_data)
+        form_data = util_functions.get_attr_dictionary(request.form)
+        # print(form_data)
+        try:
+            task = problem.Heat.from_string_dict(form_data)
+        except ValueError as e:
+            return render_template('input.html', error_presence=True,
+                                   error_text = str(e))
         # return redirect('/output')
 
     return render_template('input.html')
