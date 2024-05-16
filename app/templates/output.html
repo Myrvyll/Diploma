@@ -4,66 +4,129 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Diploma</title>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script> 
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
   </head>
   <body>
     <nav class="navbar navbar-expand-lg bg-body-tertiary">
       <div class="container-fluid">
-        <a class="navbar-brand" href="/">Diploma</a>
+        <a class="navbar-brand ms-5" href="/">Бакалаврська кваліфікаційна робота</a>
       </div>
     </nav>
-
-    <div class="container">
-      <br/><br/>
-      <p class="display-6">What is your equation?
-      </p>
-      <!-- <br/><br/> -->
-      <form action="/output" method="POST" onkeydown="return event.key != 'Enter';">
-
-        <div class="mb-5">
-          <label for="year_select" class="form-label">Коефіцієнт рівняння</label>
-          <div class="input-group mb-3">
-                <span class="input-group-text" id="pde-part-label-1">A</span>
-                <input type="text" id="coefficient" class="form-control" placeholder="Коефіцієнт при u_xx">
-          </div>
+    
+    
+    <div class="row">
+      <div class = "container col fs-4 ms-5">
+        <div class = "container">
+          <p class="display-5 ms-5 mt-5">Рівняння</p>
         </div>
+        
+        <p class="text-left  m-3"> \( \frac {\partial u}{\partial t} = 
+          {{a}} \frac {\partial^2 u}{\partial x^2}\)
+        </p>
+        <p class="text-left m-3"> \( u(0, x) = {{init_boundary}}\) </p>
+        <p class="text-left m-3">\( u(t, a) = {{left_boundary}}\) </p>
+        <p class="text-left m-3"> \( u(t, b) = {{right_boundary}}\)  </p>
 
-        <!-- <div class="mb-5">
-          <label for="year_select" class="form-label">Границі області</label>
-            <div class="input-group mb-3">
-                <span class="input-group-text" id="basic-addon1">A</span>
-                <input type="text"  id="left-x" class="form-control" placeholder="Left x value">
-            </div>
-            <div class="input-group mb-3">
-                <span class="input-group-text" id="basic-addon1">B</span>
-                <input type="text"  id="right-x" class="form-control" placeholder="Right x value">
-            </div>
-            <div class="input-group mb-3">
+
+        <div class="ms-4">
+          <p class="display-6 mt-5"> Обчислити</p>
+          <form id = "calculation_form" method="POST" onkeydown="return event.key != 'Enter';">
+            <div class="row">
+              <div class="input-group mb-3 col">
                 <span class="input-group-text" id="basic-addon1">T</span>
-                <input type="text"  id="end-t" class="form-control" placeholder="Left x value">
+                <input type="text"  name="t" id="t_input" class="form-control" placeholder="T">
+              </div>
+              <div class="input-group mb-3 col">
+                  <span class="input-group-text" id="basic-addon1">X</span>
+                  <input type="text"  name="x" id="x_input" class="form-control" placeholder="X">
+              </div>
+              <div class="mb-3 col-5">
+                  <p type="text" class="text-left m-1" id = "nn_value"> Значення з'явиться тут... </p>
+              </div>
+  
             </div>
-          </div> -->
-
-        <div class="mb-3">
-            <label for="year_select" class="form-label">Початкова умова</label>
-            <div class="input-group mb-3">
-              <span class="input-group-text" id="basic-addon1">u(0, x) =</span>
-              <input type="text"  id="init-boundary" class="form-control" placeholder="f(0, x)">
-            </div>
-            <label for="year_select" class="form-label">Ліва крайова умова</label>
-            <div class="input-group mb-3">
-              <span class="input-group-text" id="basic-addon1">u(t, A) = </span>
-              <input type="text"  id="left-boundary" class="form-control" placeholder="g(t, A)">
-            </div>
-            <label for="year_select" class="form-label">Права крайова умова</label>
-            <div class="input-group mb-3">
-              <span class="input-group-text" id="basic-addon1">u(t, B) = </span>
-              <input type="text"  id="right-boundary" class="form-control" placeholder="h(t, B)">
-            </div>
+            {% if error_presence %}
+            <p class="text-justify text-danger">{{error_text}}</p>
+            {% endif %}
+  
+            <button type="button" class="btn btn-primary" id = "calculation_form_button">Обчислити</button>
         </div>
-        <button type="submit" class="btn btn-primary">Вирішити</button>
-      </form>
+
+        </form>
+
+      </div>
+
+      <div class="container col">
+        <img src="{{url_for('static', filename='images/plot60.png')}}" id="illustration">
+        <div class="text-center">
+          <div class="d-grid gap-2 d-md-block">
+            <button type="button" class="btn btn-primary" id = "toggle_left"><</button>
+            <button type="button" class="btn btn-primary" id = "toggle_right">></button>
+          </div>
+
+        </div>
+      </div>
+
     </div>
 
+    <script>
+      document.getElementById("calculation_form_button").addEventListener("click", function () {
+        var t_input = document.getElementById("t_input").value;
+        var x_input = document.getElementById("x_input").value;
+
+        var data = {
+          "t_input": t_input,
+          "x_input": x_input,
+        };
+
+        fetch("/process_data", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(data),
+        })
+          .then((response) => response.text())
+          .then((result) => {
+            document.getElementById("nn_value").innerHTML = result;
+          })
+          .catch((error) => {
+            alert("Error occurred while processing data.");
+            console.error("Error:", error);
+          });
+      });
+
+
+      document.getElementById("toggle_right").addEventListener("click", function () {
+
+          var illustration = document.getElementById("illustration");
+          var imageUrl = document.getElementById("illustration").src;
+          var number = parseInt(imageUrl.match(/(\d+)(?=\.png)/));
+       
+          if (number < 160) {
+              number += 20;
+              var newImageUrl = imageUrl.replace(/(\d+)(?=\.png)/, number);
+              illustration.setAttribute('src', newImageUrl);
+          };
+      });
+
+      document.getElementById("toggle_left").addEventListener("click", function () {
+
+          var illustration = document.getElementById("illustration");
+          var imageUrl = document.getElementById("illustration").src;
+          var number = parseInt(imageUrl.match(/(\d+)(?=\.png)/));
+       
+          if (number > 0) {
+              number -= 20;
+              var newImageUrl = imageUrl.replace(/(\d+)(?=\.png)/, number);
+              illustration.setAttribute('src', newImageUrl);
+          };
+      });
+
+
+    </script>
   </body>
 </html>

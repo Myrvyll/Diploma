@@ -4,69 +4,88 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Diploma</title>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
   </head>
   <body>
     <nav class="navbar navbar-expand-lg bg-body-tertiary">
       <div class="container-fluid">
-        <a class="navbar-brand" href="/">Diploma</a>
+        <a class="navbar-brand ms-4" href="/">Бакалаврська кваліфікаційна робота</a>
       </div>
     </nav>
 
-    <div class="container">
-      <br/><br/>
-      <p class="display-6">What is your equation?
-      </p>
-      <!-- <br/><br/> -->
-      <form action="/" method="POST" onkeydown="return event.key != 'Enter';">
+    <p class="display-6 text-center mt-4">Задайте ваше рівняння</p>
+    <div class="row">
+      <div class="container col">
 
-        <div class="mb-5">
-          <label for="year_select" class="form-label">Коефіцієнт рівняння</label>
-          <div class="input-group mb-3">
-                <span class="input-group-text" id="pde-part-label-1">A</span>
-                <input type="text" name="coefficient" class="form-control" placeholder="Коефіцієнт при u_xx">
-          </div>
-        </div>
-
-        <div class="mb-5">
-          <label for="year_select" class="form-label">Границі області</label>
+        <form id = "input_form" action="/" method="POST" onkeydown="return event.key != 'Enter';">
+  
+          <div class="ms-5">
+            <label for="year_select" class="form-label">Коефіцієнт рівняння</label>
             <div class="input-group mb-3">
-                <span class="input-group-text" id="basic-addon1">A</span>
-                <input type="text"  name="left-x" class="form-control" placeholder="Left x value">
-            </div>
-            <div class="input-group mb-3">
-                <span class="input-group-text" id="basic-addon1">B</span>
-                <input type="text"  name="right-x" class="form-control" placeholder="Right x value">
-            </div>
-            <div class="input-group mb-3">
-                <span class="input-group-text" id="basic-addon1">T</span>
-                <input type="text"  name="end-t" class="form-control" placeholder="Left x value">
+                  <span class="input-group-text" id="pde-part-label-1">A</span>
+                  <input type="text" name="coefficient" class="form-control" placeholder="Коефіцієнт при u_xx">
             </div>
           </div>
+  
+          <div class="ms-5">
+            <label for="year_select" class="form-label">Границі області</label>
+              <div class="input-group mb-3">
+                  <span class="input-group-text" id="basic-addon1">A</span>
+                  <input type="text"  name="left-x" class="form-control" placeholder="Left x value">
+              </div>
+              <div class="input-group mb-3">
+                  <span class="input-group-text" id="basic-addon1">B</span>
+                  <input type="text"  name="right-x" class="form-control" placeholder="Right x value">
+              </div>
+              <div class="input-group mb-3">
+                  <span class="input-group-text" id="basic-addon1">T</span>
+                  <input type="text"  name="end-t" class="form-control" placeholder="Left x value">
+              </div>
+            </div>
+  
+          <div class="ms-5">
+              <label for="year_select" class="form-label">Початкова умова</label>
+              <div class="input-group mb-3">
+                <span class="input-group-text" id="basic-addon1">u(0, x) =</span>
+                <input type="text"  name="init-boundary" class="form-control" placeholder="f(0, x)">
+              </div>
+              <label for="year_select" class="form-label">Ліва крайова умова</label>
+              <div class="input-group mb-3">
+                <span class="input-group-text" id="basic-addon1">u(t, A) = </span>
+                <input type="text"  name="left-boundary" class="form-control" placeholder="g(t, A)">
+              </div>
+              <label for="year_select" class="form-label">Права крайова умова</label>
+              <div class="input-group mb-3">
+                <span class="input-group-text" id="basic-addon1">u(t, B) = </span>
+                <input type="text"  name="right-boundary" class="form-control" placeholder="h(t, B)">
+              </div>
+          </div>
+          
+          <div class="m-5">
+            {% if error_presence %}
+            <p class="text-justify text-danger">{{error_text}}</p>
+            {% endif %}
+            <button type="submit" class="btn btn-primary">Вирішити</button>
+          </div>
 
-        <div class="mb-3">
-            <label for="year_select" class="form-label">Початкова умова</label>
-            <div class="input-group mb-3">
-              <span class="input-group-text" id="basic-addon1">u(0, x) =</span>
-              <input type="text"  name="init-boundary" class="form-control" placeholder="f(0, x)">
-            </div>
-            <label for="year_select" class="form-label">Ліва крайова умова</label>
-            <div class="input-group mb-3">
-              <span class="input-group-text" id="basic-addon1">u(t, A) = </span>
-              <input type="text"  name="left-boundary" class="form-control" placeholder="g(t, A)">
-            </div>
-            <label for="year_select" class="form-label">Права крайова умова</label>
-            <div class="input-group mb-3">
-              <span class="input-group-text" id="basic-addon1">u(t, B) = </span>
-              <input type="text"  name="right-boundary" class="form-control" placeholder="h(t, B)">
-            </div>
-        </div>
+        </form>
+      </div>
 
-        {% if error_presence %}
-        <p class="text-justify">{{error_text}}</p>
-        {% endif %}
-        <button type="submit" class="btn btn-primary">Вирішити</button>
-      </form>
+      <div class="col ms-5">
+
+        <p class="text-left display-6 m-3"> \( \frac {\partial u}{\partial t} = 
+          a \frac {\partial^2 u}{\partial x^2} + f(t, x)\)
+        </p>
+        <p class="text-left display-6 m-3"> \( u(0, x) = f(0, x)\) 
+        </p>
+        <p class="text-left display-6 m-3">\( u(t, a) = g(t, A)\)
+        </p>
+        <p class="text-left display-6 m-3"> \( u(t, b) = h(t, B)\) 
+        </p>
+      </div>
+
     </div>
 
   </body>

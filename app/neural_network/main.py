@@ -4,7 +4,7 @@ from torch import nn
 import math
 import matplotlib.pyplot as plt
 
-import neural_network
+import deep_network
 # import physics_loss
 import solver
 import problem
@@ -13,7 +13,7 @@ import solver
 
 
 if  __name__ == "__main__":
-    network = neural_network.Approximator(num_neurons=32)
+    network = deep_network.Approximator(num_neurons=32)
     optimizer = torch.optim.Adam(network.parameters(), lr =0.003)
     loss = nn.MSELoss()
     

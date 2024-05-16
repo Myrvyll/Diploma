@@ -1,7 +1,7 @@
 import sympy as smp
 import torch
 
-import util_functions
+from neural_network import util_functions
 
 """
     One-line summary of the class.
@@ -49,7 +49,8 @@ class Heat():
                  start_t = 0, 
                  end_t = 1,
                  fn = None,  
-                 solution = None) -> None:
+                 solution = None,
+                 expressions = None) -> None:
         
         self.alpha = alpha            # coefficient in the equation
         self.fn = fn                  # component of heterogeneousity
@@ -65,16 +66,62 @@ class Heat():
 
         self.exact_solution = solution    # solution for checking an algorithm
 
-        self._text = None                 # things for formatted printing
+        self._expressions = expressions           # things for formatted printing
     
     @classmethod
     def from_string_dict(cls, string_dict):
+        '''
+        Converts from dict with structure:
 
-        try:
-            util_functions.validate_input_dict(string_dict)
-        except e:
-            
-      
+        {'coefficient': '1', 
+        'left-x': '0', 
+        'right-x': '1', 
+        'end-t': '1', 
+        'init-boundary': 'sin(x)', 
+        'left-boundary': '0', 
+        'right-boundary': '0'}
+
+
+        '''
+        util_functions.validate_input_dict(string_dict)
+
+        t, x = smp.symbols('t x')
+
+        temp_dict = {}
+        for key in ['init-boundary', 'left-boundary', 'right-boundary']:
+            try:
+                numba = float(string_dict[key])
+                expr = torch.vmap(lambda t, x: torch.tensor(numba, dtype=torch.float32))
+            except Exception:
+                expr = smp.parsing.sympy_parser.parse_expr(string_dict[key])
+                expr = smp.utilities.lambdify([t, x], expr)
+            temp_dict[key] = expr
+
+
+        return cls(alpha = float(string_dict['coefficient']), 
+                   initial_condition = temp_dict['init-boundary'], 
+                   left_boundary_condition = temp_dict['left-boundary'], 
+                   right_boundary_condition = temp_dict['right-boundary'], 
+                   left_x = float(string_dict['left-x']), 
+                   right_x = float(string_dict['right-x']), 
+                   start_t = 0, 
+                   end_t = float(string_dict['end-t']),
+                   expressions = string_dict)  
+    
+    def to_latex(self):
+
+        temp_dict = self._expressions.copy()
+        for key in ['init-boundary', 'left-boundary', 'right-boundary']:
+            try:
+                numba = float(temp_dict[key])
+            except ValueError:
+                expr = smp.parsing.sympy_parser.parse_expr(temp_dict[key])
+                temp_dict[key] = smp.printing.latex(expr)
+        return temp_dict
+
+
+    def __str__(self):
+        return str(self._expressions)
         
     def right_side(self, u_t):
         return u_t

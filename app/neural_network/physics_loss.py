@@ -1,8 +1,8 @@
 import torch
 from torch import nn
 
-import util_functions
-import problem
+from neural_network import util_functions
+from neural_network import problem
 
 class PhysicsLoss(nn.Module):
 

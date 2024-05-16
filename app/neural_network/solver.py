@@ -1,7 +1,11 @@
 import torch
 from torch import nn
-import problem
-import physics_loss
+import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use('agg')
+
+from neural_network import problem
+from neural_network import physics_loss
 
 
 class HeatSolver:
@@ -39,6 +43,7 @@ class HeatSolver:
     def fit(self, task: problem.Heat, epochs = 1000):
 
         self.generate_data(task)
+        self.task = task
         phys_loss_fn = physics_loss.PhysicsLoss()
 
         for epoch in range(epochs):
@@ -57,7 +62,7 @@ class HeatSolver:
             left_loss = self.loss_for_sp(y_pred_left, self.y_train_left)
             right_loss = self.loss_for_sp(y_pred_right, self.y_train_right)
 
-            total_loss = phys_loss + 100*init_loss + left_loss + right_loss
+            total_loss = phys_loss + 30*init_loss + 4*left_loss + 4*right_loss
             self.optimizer.zero_grad()
 
             total_loss.backward()
@@ -74,6 +79,35 @@ class HeatSolver:
             ys = self.network(*args)
 
         return ys
+    
+    def plot(self, path):
+
+        plt.tight_layout()
+        mesh = 1000
+    
+        x = torch.linspace(self.task.left_x, self.task.right_x, mesh)
+        t = torch.linspace(0, self.task.end_t, mesh)
+        T, X = torch.meshgrid(t, x, indexing="ij")
+        # data = torch.cartesian_prod(t, x)
+        # cmap = plt.colormaps['Reds'](28)
+        _, axes = plt.subplots(1, subplot_kw={"projection": "3d"})
+        
+        with torch.inference_mode():
+            u = self.predict(T.flatten(), X.flatten())
+        
+        u = u.reshape((mesh, mesh))
+        for angle in range(0, 180, 20):
+            axes.view_init(azim=angle-90, elev=30)
+            axes.plot_surface(X, T, u, cmap=plt.cm.coolwarm)
+            plt.savefig(path + f"{angle}")
+        # for xs in ys_to_plot:
+        #     line = axes.plot(x_train_1d, xs)
+        #     # line[0].set_color(color)
+        # axes.set_zlim(-1, 1)
+        # axes.set_ylim(-1, 1)
+
+
+
 
         
 
