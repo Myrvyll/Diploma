@@ -1,4 +1,8 @@
 matplotlib
 numpy
 jupyter
+flask
+torch
+scipy
+
 
