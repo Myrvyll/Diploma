@@ -17,11 +17,12 @@
     </nav>
     
     
+    <div class = "container">
+      <p class="display-5 ms-5 mt-5">Рівняння</p>
+    </div>
     <div class="row">
+
       <div class = "container col fs-4 ms-5">
-        <div class = "container">
-          <p class="display-5 ms-5 mt-5">Рівняння</p>
-        </div>
         
         <p class="text-left  m-3"> \( \frac {\partial u}{\partial t} = 
           {{a}} \frac {\partial^2 u}{\partial x^2}\)
@@ -34,6 +35,7 @@
         <div class="ms-4">
           <p class="display-6 mt-5"> Обчислити</p>
           <form id = "calculation_form" method="POST" onkeydown="return event.key != 'Enter';">
+           
             <div class="row">
               <div class="input-group mb-3 col">
                 <span class="input-group-text" id="basic-addon1">T</span>
@@ -43,32 +45,44 @@
                   <span class="input-group-text" id="basic-addon1">X</span>
                   <input type="text"  name="x" id="x_input" class="form-control" placeholder="X">
               </div>
-              <div class="mb-3 col-5">
+              <div class="mb-3 row">
                   <p type="text" class="text-left m-1" id = "nn_value"> Значення з'явиться тут... </p>
               </div>
-  
             </div>
             {% if error_presence %}
             <p class="text-justify text-danger">{{error_text}}</p>
             {% endif %}
   
             <button type="button" class="btn btn-primary" id = "calculation_form_button">Обчислити</button>
-        </div>
-
-        </form>
-
-      </div>
-
-      <div class="container col">
-        <img src="{{url_for('static', filename='images/plot60.png')}}" id="illustration">
-        <div class="text-center">
-          <div class="d-grid gap-2 d-md-block">
-            <button type="button" class="btn btn-primary" id = "toggle_left"><</button>
-            <button type="button" class="btn btn-primary" id = "toggle_right">></button>
-          </div>
-
+          </form>
         </div>
       </div>
+
+
+      <div class="container col fs-4 ms-5">
+        <p class="text-left  m-3"> MSE NN: {{error_nn["MSE"]}}</p>
+        <p class="text-left  m-3"> MAE NN: {{error_nn["MAE"]}}</p>
+        <p class="text-left  m-3"> MRAE NN: {{error_nn["MRAE"]}}</p>
+        <p class="text-left  m-3"> MSE FDM: {{error_fdm["MSE"]}}</p>
+        <p class="text-left  m-3"> MAE FDM: {{error_fdm["MAE"]}}</p>
+        <p class="text-left  m-3"> MRAE FDM: {{error_fdm["MRAE"]}}</p>
+
+      </div>
+      
+    </div>
+
+    <div class="row">
+      <img class = "col" src="{{url_for('static', filename='images/plot_nn60.png')}}" id="illustration_nn">
+      <img class = "col" src="{{url_for('static', filename='images/plot_fdm60.png')}}" id="illustration_fdm">
+      <img class = "col" src="{{url_for('static', filename='images/plot_sol60.png')}}" id="illustration_sol">
+      <div class="text-center">
+        <div class="d-grid gap-2 d-md-block">
+          <button type="button" class="btn btn-primary" id = "toggle_left"><</button>
+          <button type="button" class="btn btn-primary" id = "toggle_right">></button>
+        </div>
+      </div>
+      <img src="{{url_for('static', filename='images/plot_loss.png')}}" id="illustration2">
+    </div>
 
     </div>
 
@@ -91,7 +105,7 @@
         })
           .then((response) => response.text())
           .then((result) => {
-            document.getElementById("nn_value").innerHTML = result;
+            document.getElementById("nn_value").innerHTML = "Значення: " + result;
           })
           .catch((error) => {
             alert("Error occurred while processing data.");
@@ -102,27 +116,49 @@
 
       document.getElementById("toggle_right").addEventListener("click", function () {
 
-          var illustration = document.getElementById("illustration");
-          var imageUrl = document.getElementById("illustration").src;
-          var number = parseInt(imageUrl.match(/(\d+)(?=\.png)/));
+          var illustrationNN = document.getElementById("illustration_nn");
+          var illustrationFDM = document.getElementById("illustration_fdm");
+          var illustrationSol = document.getElementById("illustration_sol");
+
+          var imageUrlNN = illustrationNN.src;
+          var imageUrlFDM = illustrationFDM.src;
+          var imageUrlSol = illustrationSol.src;
+          var number = parseInt(imageUrlNN.match(/(\d+)(?=\.png)/));
+
+          var angleChange = 60
        
-          if (number < 160) {
-              number += 20;
-              var newImageUrl = imageUrl.replace(/(\d+)(?=\.png)/, number);
-              illustration.setAttribute('src', newImageUrl);
+          if (number < (180-angleChange)) {
+              number += angleChange;
+              var newImageUrlNN = imageUrlNN.replace(/(\d+)(?=\.png)/, number);
+              var newImageUrlFDM = imageUrlFDM.replace(/(\d+)(?=\.png)/, number);
+              var newImageUrlSol = imageUrlSol.replace(/(\d+)(?=\.png)/, number);
+              illustrationNN.setAttribute('src', newImageUrlNN);
+              illustrationFDM.setAttribute('src', newImageUrlFDM);
+              illustrationSol.setAttribute('src', newImageUrlSol);
           };
       });
 
       document.getElementById("toggle_left").addEventListener("click", function () {
 
-          var illustration = document.getElementById("illustration");
-          var imageUrl = document.getElementById("illustration").src;
-          var number = parseInt(imageUrl.match(/(\d+)(?=\.png)/));
+          var illustrationNN = document.getElementById("illustration_nn");
+          var illustrationFDM = document.getElementById("illustration_fdm");
+          var illustrationSol = document.getElementById("illustration_sol");
+
+          var imageUrlNN = illustrationNN.src;
+          var imageUrlFDM = illustrationFDM.src;
+          var imageUrlSol = illustrationSol.src;
+          var number = parseInt(imageUrlNN.match(/(\d+)(?=\.png)/));
+
+          var angleChange = 60
        
-          if (number > 0) {
-              number -= 20;
-              var newImageUrl = imageUrl.replace(/(\d+)(?=\.png)/, number);
-              illustration.setAttribute('src', newImageUrl);
+          if (number > angleChange) {
+              number -= angleChange;
+              var newImageUrlNN = imageUrlNN.replace(/(\d+)(?=\.png)/, number);
+              var newImageUrlFDM = imageUrlFDM.replace(/(\d+)(?=\.png)/, number);
+              var newImageUrlSol = imageUrlSol.replace(/(\d+)(?=\.png)/, number);
+              illustrationNN.setAttribute('src', newImageUrlNN);
+              illustrationFDM.setAttribute('src', newImageUrlFDM);
+              illustrationSol.setAttribute('src', newImageUrlSol);
           };
       });
 

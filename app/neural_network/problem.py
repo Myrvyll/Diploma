@@ -1,7 +1,6 @@
 import sympy as smp
 import torch
-
-from neural_network import util_functions
+import matplotlib.pyplot as plt
 
 """
     One-line summary of the class.
@@ -83,18 +82,19 @@ class Heat():
 
 
         '''
-        util_functions.validate_input_dict(string_dict)
+        cls.validate_input_dict(string_dict)
 
         t, x = smp.symbols('t x')
 
         temp_dict = {}
-        for key in ['init-boundary', 'left-boundary', 'right-boundary']:
-            try:
-                numba = float(string_dict[key])
-                expr = torch.vmap(lambda t, x: torch.tensor(numba, dtype=torch.float32))
-            except Exception:
-                expr = smp.parsing.sympy_parser.parse_expr(string_dict[key])
-                expr = smp.utilities.lambdify([t, x], expr)
+        for key in ['init-boundary', 'left-boundary', 'right-boundary', 'solution']:
+            if string_dict[key] is not None:
+                try:
+                    numba = float(string_dict[key])
+                    expr = torch.vmap(lambda t, x: torch.tensor(numba, dtype=torch.float32))
+                except Exception:
+                    expr = smp.parsing.sympy_parser.parse_expr(string_dict[key])
+                    expr = smp.utilities.lambdify([t, x], expr)
             temp_dict[key] = expr
 
 
@@ -106,6 +106,7 @@ class Heat():
                    right_x = float(string_dict['right-x']), 
                    start_t = 0, 
                    end_t = float(string_dict['end-t']),
+                   solution = temp_dict['solution'],
                    expressions = string_dict)  
     
     def to_latex(self):
@@ -119,7 +120,6 @@ class Heat():
                 temp_dict[key] = smp.printing.latex(expr)
         return temp_dict
 
-
     def __str__(self):
         return str(self._expressions)
         
@@ -128,3 +128,87 @@ class Heat():
         
     def left_side(self, ts, xs, u_xx):
         return self.alpha*u_xx #+ self.fn(ts, xs)
+    
+    def validate_input_dict(input_dict: dict[str]) -> None:
+        """
+        Validate the input dictionary against the specified requirements.
+    
+        Args:
+            input_dict (Dict[str, str]): A dictionary with the following keys:
+                'coefficient', 'left-x', 'right-x', 'end-t', 'init-boundary', 'left-boundary', 'right-boundary'
+                All values in the dictionary are strings.
+    
+        Raises:
+            ValueError: If any of the validation checks fail.
+    
+        Returns:
+            None
+        """
+        t, x = smp.symbols('t x')
+    
+        # Check 'coefficient', 'left-x', and 'right-x' for float values
+        for key in ['coefficient', 'left-x', 'right-x']:
+            value = input_dict.get(key)
+            if value is not None:
+                try:
+                    float_value = float(value)
+                except ValueError:
+                    raise ValueError(f"The value for '{key}' is not a valid float.")
+            else:
+                raise ValueError(f"The value for '{key}' can not be None.")
+        
+        # check left and right sides to be left-x < right-x
+        if input_dict['left-x'] > input_dict['right-x']:
+            raise ValueError(f'Left x {input_dict["left-x"]} should be less than right x {input_dict["right-x"]}')
+    
+        # Check 'end-t' for positive float value
+        end_t_value = input_dict.get('end-t')
+        if end_t_value is not None:
+            try:
+                end_t = float(end_t_value)
+                if end_t <= 0:
+                    raise ValueError("The value for 'end-t' must be a positive float or None.")
+            except ValueError:
+                raise ValueError("The value for 'end-t' is not a valid float.")
+        else:
+            raise ValueError(f"The value for 'end-t' can not be None.")
+    
+        if input_dict.get('init-boundary') is None:
+            raise ValueError(f"The value for initial condition can not be None.")
+        
+        # Check other keys for valid SymPy expressions
+        for key in ['init-boundary', 'left-boundary', 'right-boundary', 'solution']:
+            value = input_dict.get(key)
+            if value is not None:
+                try:
+                    expr = smp.parsing.sympy_parser.parse_expr(value)
+                    lambdified_expr = smp.utilities.lambdify([t, x], expr)
+                    _ = lambdified_expr(3, 4)
+                except (SyntaxError, TypeError, ValueError):
+                    raise ValueError(f"The value for '{key}' is not a valid SymPy expression.")
+                
+
+    def plot_solution(self, path):
+
+        if self.exact_solution is None:
+            return None
+
+        plt.tight_layout()
+        mesh = 1000
+    
+        x = torch.linspace(self.left_x, self.right_x, mesh)
+        t = torch.linspace(0, self.end_t, mesh)
+        T, X = torch.meshgrid(t, x, indexing="ij")
+        # data = torch.cartesian_prod(t, x)
+        # cmap = plt.colormaps['Reds'](28)
+        _, axes = plt.subplots(1, subplot_kw={"projection": "3d"})
+        
+        u = self.exact_solution(T.flatten(), X.flatten())
+        u = u.reshape((mesh, mesh))
+
+        for angle in range(0, 180, 60):
+        # for angle in range(40, 80, 20):
+            axes.view_init(azim=angle-90, elev=30)
+            axes.plot_surface(X, T, u, cmap=plt.cm.coolwarm)
+            axes.set_title("Точний розв'язок")
+            plt.savefig(path + f"{angle}")

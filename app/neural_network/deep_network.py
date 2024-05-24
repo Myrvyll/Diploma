@@ -17,6 +17,8 @@ class Approximator(nn.Module):
         for _ in range(num_layers):
             layers.extend([nn.Linear(num_neurons, num_neurons), activation])
 
+        # layers.extend([nn.Linear(num_neurons, num_neurons), nn.ReLU()])
+
         output_layer = nn.Linear(num_neurons, num_outputs)
         layers.append(output_layer)
 
