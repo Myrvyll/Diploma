@@ -1,0 +1,90 @@
+
+
+    
+    
+    <div class="row">
+      
+        <div class = "container col fs-4 ms-5">
+          <div class = "container display-5  mt-5">
+            <p >Рівняння</p>
+          </div>
+          
+          <p class="text-left  m-3"> \( \frac {\partial u}{\partial t} = 
+            {{a}} \frac {\partial^2 u}{\partial x^2}\)
+          </p>
+          <p class="text-left m-3"> \( u(0, x) = {{init_boundary}}\) </p>
+          <p class="text-left m-3">\( u(t, a) = {{left_boundary}}\) </p>
+          <p class="text-left m-3"> \( u(t, b) = {{right_boundary}}\)  </p>
+  
+  
+          <div class="ms-4">
+            <p class="display-6 mt-5"> Обчислити</p>
+            <form id = "calculation_form" method="POST" onkeydown="return event.key != 'Enter';">
+             
+              <div class="row">
+                <div class="input-group mb-3 col">
+                  <span class="input-group-text" id="basic-addon1">T</span>
+                  <input type="text"  name="t" id="t_input" class="form-control" placeholder="T">
+                </div>
+                <div class="input-group mb-3 col">
+                    <span class="input-group-text" id="basic-addon1">X</span>
+                    <input type="text"  name="x" id="x_input" class="form-control" placeholder="X">
+                </div>
+                <div class="mb-3 row">
+                    <p type="text" class="text-left m-1" id = "nn_value"> Значення з'явиться тут. </p>
+                </div>
+              </div>
+              {% if error_presence %}
+              <p class="text-justify text-danger">{{error_text}}</p>
+              {% endif %}
+    
+              <button type="button" class="btn btn-primary" id = "calculation_form_button">Обчислити</button>
+            </form>
+          </div>
+        </div>
+  
+  
+        <div class="container col">
+          <div class = "container text-center fs-2 display-5 mt-5">
+            <p>Метрики нейронної мережі</p>
+          </div>
+  
+          <div class="m-4 fs-5">
+            <p class="text-left  m-3"> MSE NN: {{"{:0.8f}".format(error_nn["MSE"])}}</p>
+            <p class="text-left  m-3"> MAE NN: {{"{:0.8f}".format(error_nn["MAE"])}}</p>
+            <p class="text-left  m-3"> MRAE NN: {{"{:0.8f}".format(error_nn["MRAE"])}}</p>
+          </div>
+          <div class="m-4 fs-5">
+            <p class="text-left  m-3"> Total loss: {{"{:0.6f}".format(losses["total_loss"])}}</p>
+            <p class="text-left  m-3"> Inner loss: {{"{:0.6f}".format(losses["physics_loss"])}}</p>
+            <p class="text-left  m-3"> Initial loss: {{"{:0.6f}".format(losses["init_loss"])}}</p>
+            <p class="text-left  m-3"> Left loss: {{"{:0.6f}".format(losses["left_loss"])}}</p>
+            <p class="text-left  m-3"> Right loss: {{"{:0.6f}".format(losses["right_loss"])}}</p>
+          </div>
+  
+  
+        </div>
+        <div class="container col fs-4 ms-5  mt-5">
+          <div class = "container text-center fs-2 display-5">
+            <p>Метрики метода скінченних різниць</p>
+          </div>
+          <p class="text-left  m-3 fs-5"> MSE FDM: {{"{:0.8f}".format(error_fdm["MSE"])}}</p>
+          <p class="text-left  m-3 fs-5"> MAE FDM: {{"{:0.8f}".format(error_fdm["MAE"])}}</p>
+          <p class="text-left  m-3 fs-5"> MRAE FDM: {{"{:0.8f}".format(error_fdm["MRAE"])}}</p>
+        </div>
+      </div>
+  
+      <div class="row">
+        <img class = "col" src="{{url_for('static', filename='images/plot_nn60.png')}}" id="illustration_nn">
+        <img class = "col" src="{{url_for('static', filename='images/plot_fdm60.png')}}" id="illustration_fdm">
+        <img class = "col" src="{{url_for('static', filename='images/plot_sol60.png')}}" id="illustration_sol">
+        <div class="text-center">
+          <div class="d-grid gap-2 d-md-block">
+            <button type="button" class="btn btn-primary" id = "toggle_left"><</button>
+            <button type="button" class="btn btn-primary" id = "toggle_right">></button>
+          </div>
+        </div>
+        <div class="container-sm">
+          <img src="{{url_for('static', filename='images/plot_loss.png')}}" id="illustration2">
+        </div>
+      </div>

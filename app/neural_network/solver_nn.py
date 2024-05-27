@@ -103,6 +103,8 @@ class NNHeatSolver:
 
         self.generate_data(task)
 
+        # lr_adjuster = nn.L
+
         self.t_train_inner.requires_grad = True
         self.x_train_inner.requires_grad = True
 
@@ -116,6 +118,9 @@ class NNHeatSolver:
 
             self.network.train()
 
+            # t_id = torch.randint(0, len(self.t_train_inner), (300,))
+            # x_id = torch.randint(0, len(self.x_train_inner), (300,))
+
             y_pred_inner = self.predict_in_training(self.t_train_inner, self.x_train_inner)
             y_pred_init = self.predict_in_training(self.t_train_init, self.x_train_init)
             y_pred_left = self.predict_in_training(self.t_train_left, self.x_train_left)
@@ -126,13 +131,13 @@ class NNHeatSolver:
             left_loss = self.loss_for_sp(y_pred_left, self.y_train_left)
             right_loss = self.loss_for_sp(y_pred_right, self.y_train_right)
 
-            loss_values['physics_loss'].append(phys_loss.detach())
-            loss_values['init_loss'].append(init_loss.detach())
-            loss_values['left_loss'].append(left_loss.detach())
-            loss_values['right_loss'].append(right_loss.detach())
+            loss_values['physics_loss'].append(phys_loss.item())
+            loss_values['init_loss'].append(init_loss.item())
+            loss_values['left_loss'].append(left_loss.item())
+            loss_values['right_loss'].append(right_loss.item())
 
             total_loss = phys_loss + 10*init_loss + left_loss + right_loss
-            loss_values['total_loss'].append(total_loss.detach())
+            loss_values['total_loss'].append(total_loss.item())
 
             self.optimizer.zero_grad()
 
@@ -197,8 +202,6 @@ class NNHeatSolver:
         # axes.set_ylim(-1, 1)
 
     def plot_loss(self, path):
-        
-        plt.tight_layout()
 
         fig, axes = plt.subplots(2, 3)
 
