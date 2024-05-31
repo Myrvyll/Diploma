@@ -5,8 +5,8 @@ import matplotlib
 matplotlib.use('agg')
 
 
-from neural_network import problem
-from neural_network import physics_loss
+from pde_solver import problem
+from pde_solver import physics_loss
 
 
 import torch
@@ -57,32 +57,61 @@ class NNHeatSolver:
         self.y_train_right = None
 
         self.loss_values = None
+        self.learning_rates = []
         self.y_min = None
         self.y_max = None
+        self.test_data = {}
+
+    def generate_test_data(self, task: problem.Heat):
+        
+        # m = torch.distributions.Exponential(torch.tensor([7.0]))
+        # t_train_inner_exp = m.rsample(torch.Size([60])).squeeze()
+        t_train_inner_un = torch.rand(80) * (task.end_t - task.start_t) + task.start_t
+
+        # self.t_train_inner = torch.cat([t_train_inner_exp, t_train_inner_un])
+        # self.t_train_inner = t_train_inner_exp
+        self.test_data['t_inner'] = t_train_inner_un
+        self.test_data['x_inner'] = torch.rand(80) * (task.right_x - task.left_x) + task.left_x
+
+        # data in init
+        self.test_data['x_init'] = torch.linspace(task.left_x, task.right_x, 50)
+        self.test_data['t_init'] = torch.zeros_like(self.x_train_init)
+        self.test_data['y_init'] = task.initial_condition(self.t_train_init, self.x_train_init)
+
+        # data in left boundary
+        self.test_data['t_left'] = torch.linspace(task.start_t, task.end_t, 20)
+        self.test_data['x_left'] = torch.full_like(self.t_train_left, task.left_x)
+        self.test_data['y_left'] = task.left_boundary(self.t_train_left, self.x_train_left)
+
+        # data in right boundary
+        self.test_data['t_right'] = torch.linspace(task.start_t, task.end_t, 20)
+        self.test_data['x_right'] = torch.full_like(self.t_train_right, task.right_x)
+        self.test_data['y_right'] = task.right_boundary(self.t_train_right, self.x_train_right)
 
 
     def generate_data(self, task: problem.Heat):
         
-        m = torch.distributions.Exponential(torch.tensor([7.0]))
-        t_train_inner_exp = m.rsample(torch.Size([1000])).squeeze()
-        # t_train_inner_un = torch.rand(100) * (task.end_t - task.start_t) + task.start_t
+        # m = torch.distributions.Exponential(torch.tensor([7.0]))
+        # t_train_inner_exp = m.rsample(torch.Size([60])).squeeze()
+        t_train_inner_un = torch.rand(80) * (task.end_t - task.start_t) + task.start_t
 
         # self.t_train_inner = torch.cat([t_train_inner_exp, t_train_inner_un])
-        self.t_train_inner = t_train_inner_exp
-        self.x_train_inner = torch.rand(1000) * (task.right_x - task.left_x) + task.left_x
+        # self.t_train_inner = t_train_inner_exp
+        self.t_train_inner = t_train_inner_un
+        self.x_train_inner = torch.rand(80) * (task.right_x - task.left_x) + task.left_x
 
         # data in init
-        self.x_train_init = torch.linspace(task.left_x, task.right_x, 100)
+        self.x_train_init = torch.linspace(task.left_x, task.right_x, 50)
         self.t_train_init = torch.zeros_like(self.x_train_init)
         self.y_train_init = task.initial_condition(self.t_train_init, self.x_train_init)
 
         # data in left boundary
-        self.t_train_left = torch.linspace(task.start_t, task.end_t, 30)
+        self.t_train_left = torch.linspace(task.start_t, task.end_t, 20)
         self.x_train_left = torch.full_like(self.t_train_left, task.left_x)
         self.y_train_left = task.left_boundary(self.t_train_left, self.x_train_left)
 
         # data in right boundary
-        self.t_train_right = torch.linspace(task.start_t, task.end_t, 30)
+        self.t_train_right = torch.linspace(task.start_t, task.end_t, 20)
         self.x_train_right = torch.full_like(self.t_train_right, task.right_x)
         self.y_train_right = task.right_boundary(self.t_train_right, self.x_train_right)
 
@@ -96,17 +125,18 @@ class NNHeatSolver:
         # Rescale the output back to the original scale
         return y_normalized * (self.y_max - self.y_min) + self.y_min
 
-    def fit(self, task: problem.Heat, epochs=1000):
+    def fit(self, task: problem.Heat, epochs=10000):
 
         self.task = task
         phys_loss_fn = physics_loss.PhysicsLoss()
 
+
+        # lr_adjuster = torch.optim.lr_scheduler.MultiStepLR(self.optimizer, milestones=[epochs*0.5], gamma = 0.1)
         self.generate_data(task)
-
-        # lr_adjuster = nn.L
-
+        self.generate_test_data(task)
         self.t_train_inner.requires_grad = True
         self.x_train_inner.requires_grad = True
+
 
         loss_values = {'physics_loss':[], 
                        'init_loss':[], 
@@ -120,7 +150,8 @@ class NNHeatSolver:
 
             # t_id = torch.randint(0, len(self.t_train_inner), (300,))
             # x_id = torch.randint(0, len(self.x_train_inner), (300,))
-
+            
+            # training
             y_pred_inner = self.predict_in_training(self.t_train_inner, self.x_train_inner)
             y_pred_init = self.predict_in_training(self.t_train_init, self.x_train_init)
             y_pred_left = self.predict_in_training(self.t_train_left, self.x_train_left)
@@ -136,7 +167,7 @@ class NNHeatSolver:
             loss_values['left_loss'].append(left_loss.item())
             loss_values['right_loss'].append(right_loss.item())
 
-            total_loss = phys_loss + 10*init_loss + left_loss + right_loss
+            total_loss = phys_loss + 75*init_loss + left_loss + right_loss
             loss_values['total_loss'].append(total_loss.item())
 
             self.optimizer.zero_grad()
@@ -144,9 +175,14 @@ class NNHeatSolver:
             total_loss.backward()
 
             self.optimizer.step()
+            # self.learning_rates.append(lr_adjuster.get_last_lr())
+            # lr_adjuster.step()
 
             if epoch % (epochs / 10) == 0:
-               logger.info(f'Loss phys: {phys_loss:.8f} | loss left: {left_loss:.8f} | loss right: {right_loss:.8f} | loss init: {init_loss:.8f} | Total: {total_loss:.8f}')
+                self.generate_data(task)
+                self.t_train_inner.requires_grad = True
+                self.x_train_inner.requires_grad = True
+                logger.info(f'{epoch}/{epochs}|Loss phys: {phys_loss:.8f} | loss left: {left_loss:.8f} | loss right: {right_loss:.8f} | loss init: {init_loss:.8f} | Total: {total_loss:.8f}')
 
             self.loss_values = loss_values
 
@@ -193,7 +229,9 @@ class NNHeatSolver:
         # for angle in range(40, 80, 20):
             axes.view_init(azim=angle-90, elev=30)
             axes.plot_surface(X, T, u, cmap=plt.cm.coolwarm)
-            axes.set_title("НМ розв'язок")
+            axes.set_title("Нейронна мережа")
+            axes.set_xlabel("X")
+            axes.set_ylabel("T")
             plt.savefig(path + f"{angle}")
         # for xs in ys_to_plot:
         #     line = axes.plot(x_train_1d, xs)
@@ -203,7 +241,7 @@ class NNHeatSolver:
 
     def plot_loss(self, path):
 
-        fig, axes = plt.subplots(2, 3)
+        fig, axes = plt.subplots(2, 3, figsize=(12, 8))
 
         indexes = [[0, 0], [0, 1], [1, 0], [1, 1], [0, 2]]
 
@@ -211,6 +249,9 @@ class NNHeatSolver:
             ax = axes[id[0], id[1]]
             ax.set_title(key)
             ax.plot(value)
+        
+        axes[1][2].plot(self.learning_rates)
+        axes[1][2].set_title("Learning rate")
 
         fig.savefig(path)
 

@@ -7,7 +7,7 @@ matplotlib.use('agg')
 import torch.nn as nn
 
 
-from neural_network import problem
+from pde_solver import problem
 
 import logging
 formatter = logging.Formatter('%(asctime)s:%(filename)s:%(levelname)s:\n%(message)s')
@@ -103,7 +103,9 @@ class FDMHeatSolver:
         # for angle in range(40, 80, 20):
             axes.view_init(azim=(angle-90), elev=30)
             axes.plot_surface(X, T, u, cmap=plt.cm.coolwarm)
-            axes.set_title("FDM розв'язок")
+            axes.set_title("Скінченні різниці")
+            axes.set_xlabel("X")
+            axes.set_ylabel("T")
             plt.savefig(path + f"{angle}")
         # for xs in ys_to_plot:
         #     line = axes.plot(x_train_1d, xs)

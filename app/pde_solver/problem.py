@@ -2,34 +2,6 @@ import sympy as smp
 import torch
 import matplotlib.pyplot as plt
 
-"""
-    One-line summary of the class.
-
-    Extended description of the class, providing more details
-    about its purpose and functionality. This can span multiple
-    lines.
-
-    Attributes:
-        attribute1 (type): Description of attribute1.
-        attribute2 (type): Description of attribute2.
-        ...
-
-    Parameters:
-        param1 (type): Description of parameter 1 for the constructor.
-        param2 (type): Description of parameter 2 for the constructor.
-        ...
-
-    Examples:
-        >>> # Example usage of the class
-        >>> instance = ClassName(param1, param2)
-        >>> result = instance.method(args)
-        # Expected output or behavior
-
-    Notes:
-        Any additional notes or references related to the class.
-    """
-
-
 
 class Heat():
     ''' Клас для опису теплового одновимірного диференціального рівняння.
@@ -211,4 +183,6 @@ class Heat():
             axes.view_init(azim=angle-90, elev=30)
             axes.plot_surface(X, T, u, cmap=plt.cm.coolwarm)
             axes.set_title("Точний розв'язок")
+            axes.set_xlabel("X")
+            axes.set_ylabel("T")
             plt.savefig(path + f"{angle}")

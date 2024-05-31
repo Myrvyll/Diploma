@@ -5,11 +5,11 @@ import torch
 from torch import nn
 
 
-from neural_network import util_functions
-from neural_network import solver_nn
-from neural_network import solver_fdm
-from neural_network import problem
-from neural_network import deep_network
+from pde_solver import util_functions
+from pde_solver import solver_nn
+from pde_solver import solver_fdm
+from pde_solver import problem
+from pde_solver import deep_network
 
 # torch.manual_seed(42)
 
@@ -18,8 +18,6 @@ app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
 
-network = deep_network.Approximator(num_neurons=128, num_layers=4)
-optimizer = torch.optim.Adam(network.parameters(), lr = 0.001)
 
 
 # ------------------------------
@@ -27,6 +25,8 @@ optimizer = torch.optim.Adam(network.parameters(), lr = 0.001)
 @app.route("/", methods=["POST", 'GET'])
 def get_input():
 
+    network = deep_network.Approximator(num_neurons=64, num_layers=5)
+    optimizer = torch.optim.Adam(network.parameters(), lr = 0.0005)
     nn_answer = solver_nn.NNHeatSolver(optimizer=optimizer, network=network, loss=nn.MSELoss())
 
     if request.method == 'POST':
@@ -42,7 +42,7 @@ def get_input():
                                    error_text=str(e), saved_attributes=form_data)
         print(task)
         # Neural network solution
-        nn_answer.fit(nn_answer.task, epochs=500)
+        nn_answer.fit(nn_answer.task)
         nn_answer.plot("E:/KPI/Diploma/app/static/images/plot_nn")
         nn_answer.plot_loss("E:/KPI/Diploma/app/static/images/plot_loss")
 
@@ -85,6 +85,7 @@ def get_output():
     print(error_nn)
     print(error_fdm)
 
+
     last_epoch_losses = {key: value[-1] for key, value in nn_answer.loss_values.items()}
 
     answer_print_pars = nn_answer.task.to_latex()
@@ -96,7 +97,8 @@ def get_output():
                            right_boundary=answer_print_pars['right-boundary'],
                            losses = last_epoch_losses,
                            error_nn=error_nn,
-                           error_fdm=error_fdm)
+                           error_fdm=error_fdm,
+                           answer = nn_answer.task._expressions)
 
 # @app.post("/output")
 # def get_data():

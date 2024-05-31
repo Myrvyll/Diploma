@@ -1,6 +1,5 @@
 import torch
 from torch import autograd
-import sympy as smp
 
 
 
