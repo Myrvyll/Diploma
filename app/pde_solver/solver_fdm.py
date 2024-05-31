@@ -96,8 +96,8 @@ class FDMHeatSolver:
         T, X = torch.meshgrid(t, x, indexing="ij")
         # data = torch.cartesian_prod(t, x)
         # cmap = plt.colormaps['Reds'](28)
-        _, axes = plt.subplots(1, subplot_kw={"projection": "3d"})
-        
+        fig, axes = plt.subplots(1, subplot_kw={"projection": "3d"})
+    
         u = self.solution
         for angle in range(0, 180, 60):
         # for angle in range(40, 80, 20):
@@ -106,7 +106,8 @@ class FDMHeatSolver:
             axes.set_title("Скінченні різниці")
             axes.set_xlabel("X")
             axes.set_ylabel("T")
-            plt.savefig(path + f"{angle}")
+            fig.savefig(path + f"{angle}")
+            plt.close()
         # for xs in ys_to_plot:
         #     line = axes.plot(x_train_1d, xs)
         #     # line[0].set_color(color)

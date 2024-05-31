@@ -91,7 +91,7 @@ class NNHeatSolver:
 
     def generate_data(self, task: problem.Heat):
         
-        # m = torch.distributions.Exponential(torch.tensor([7.0]))
+        m = torch.distributions.Exponential(torch.tensor([7.0]))
         # t_train_inner_exp = m.rsample(torch.Size([60])).squeeze()
         t_train_inner_un = torch.rand(80) * (task.end_t - task.start_t) + task.start_t
 
@@ -136,9 +136,17 @@ class NNHeatSolver:
         self.generate_test_data(task)
         self.t_train_inner.requires_grad = True
         self.x_train_inner.requires_grad = True
+        self.test_data['t_inner'].requires_grad = True
+        self.test_data['x_inner'].requires_grad = True
 
 
         loss_values = {'physics_loss':[], 
+                       'init_loss':[], 
+                       'left_loss':[],
+                       'right_loss':[], 
+                       'total_loss': []}
+        
+        loss_values_test = {'physics_loss':[], 
                        'init_loss':[], 
                        'left_loss':[],
                        'right_loss':[], 
@@ -150,6 +158,7 @@ class NNHeatSolver:
 
             # t_id = torch.randint(0, len(self.t_train_inner), (300,))
             # x_id = torch.randint(0, len(self.x_train_inner), (300,))
+            self.optimizer.zero_grad()
             
             # training
             y_pred_inner = self.predict_in_training(self.t_train_inner, self.x_train_inner)
@@ -170,21 +179,48 @@ class NNHeatSolver:
             total_loss = phys_loss + 75*init_loss + left_loss + right_loss
             loss_values['total_loss'].append(total_loss.item())
 
-            self.optimizer.zero_grad()
 
             total_loss.backward()
 
             self.optimizer.step()
             # self.learning_rates.append(lr_adjuster.get_last_lr())
+            if epoch % (epochs / 10) == 0:
+                logger.info(f'{epoch}/{epochs}|Loss phys: {phys_loss:.8f} | loss left: {left_loss:.8f} | loss right: {right_loss:.8f} | loss init: {init_loss:.8f} | Total: {total_loss:.8f}')
             # lr_adjuster.step()
+            self.network.eval()
+
+            y_pred_inner = self.predict_in_training(self.test_data['t_inner'], self.test_data['x_inner'])
+            y_pred_init = self.predict_in_training(self.test_data['t_init'], self.test_data['x_init'])
+            y_pred_left = self.predict_in_training(self.test_data['t_left'], self.test_data['x_left'])
+            y_pred_right = self.predict_in_training(self.test_data['t_right'], self.test_data['x_right'])
+
+            phys_loss = phys_loss_fn(self.test_data['t_inner'], self.test_data['x_inner'], y_pred_inner, task)
+            init_loss = self.loss_for_sp(y_pred_init, self.test_data['y_init'])
+            left_loss = self.loss_for_sp(y_pred_left, self.test_data['y_left'])
+            right_loss = self.loss_for_sp(y_pred_right, self.test_data['y_right'])
+
+            total_loss = phys_loss + 75*init_loss + left_loss + right_loss
+            total_loss.backward()
+
+            loss_values_test['physics_loss'].append(phys_loss.item())
+            loss_values_test['init_loss'].append(init_loss.item())
+            loss_values_test['left_loss'].append(left_loss.item())
+            loss_values_test['right_loss'].append(right_loss.item())
+            loss_values_test['total_loss'].append(total_loss.item())
+
+            # self.test_data['t_inner'].grad.zeros_()
+            # self.test_data['x_inner'].grad.zeros_()
+            
 
             if epoch % (epochs / 10) == 0:
                 self.generate_data(task)
                 self.t_train_inner.requires_grad = True
                 self.x_train_inner.requires_grad = True
-                logger.info(f'{epoch}/{epochs}|Loss phys: {phys_loss:.8f} | loss left: {left_loss:.8f} | loss right: {right_loss:.8f} | loss init: {init_loss:.8f} | Total: {total_loss:.8f}')
+                logger.info(f'{epoch}/{epochs} Test |Loss phys: {phys_loss:.8f} | loss left: {left_loss:.8f} | loss right: {right_loss:.8f} | loss init: {init_loss:.8f} | Total: {total_loss:.8f}')
 
+            
             self.loss_values = loss_values
+            self.loss_values_test = loss_values_test
 
     def predict_in_training(self, t, x):
 
@@ -219,7 +255,7 @@ class NNHeatSolver:
         T, X = torch.meshgrid(t, x, indexing="ij")
         # data = torch.cartesian_prod(t, x)
         # cmap = plt.colormaps['Reds'](28)
-        _, axes = plt.subplots(1, subplot_kw={"projection": "3d"})
+        fig, axes = plt.subplots(1, subplot_kw={"projection": "3d"})
         
         with torch.inference_mode():
             u = self.predict(T.flatten(), X.flatten())
@@ -232,7 +268,8 @@ class NNHeatSolver:
             axes.set_title("Нейронна мережа")
             axes.set_xlabel("X")
             axes.set_ylabel("T")
-            plt.savefig(path + f"{angle}")
+            fig.savefig(path + f"{angle}")
+            plt.close()
         # for xs in ys_to_plot:
         #     line = axes.plot(x_train_1d, xs)
         #     # line[0].set_color(color)
@@ -249,11 +286,13 @@ class NNHeatSolver:
             ax = axes[id[0], id[1]]
             ax.set_title(key)
             ax.plot(value)
+            ax.plot(self.loss_values_test[key])
         
         axes[1][2].plot(self.learning_rates)
         axes[1][2].set_title("Learning rate")
 
         fig.savefig(path)
+        # plt.close()
 
     def count_metrics(self, n_points):
         
