@@ -26,7 +26,7 @@ Session(app)
 def get_input():
 
     network = deep_network.Approximator(num_neurons=64, num_layers=5)
-    optimizer = torch.optim.Adam(network.parameters(), lr = 0.0005)
+    optimizer = torch.optim.Adam(network.parameters(), lr = 0.0006)
     nn_answer = solver_nn.NNHeatSolver(optimizer=optimizer, network=network, loss=nn.MSELoss())
 
     if request.method == 'POST':
@@ -86,7 +86,8 @@ def get_output():
     print(error_fdm)
 
 
-    last_epoch_losses = {key: value[-1] for key, value in nn_answer.loss_values.items()}
+    result_epoch_losses = {key: value[nn_answer.min_test_loss_idx] for key, value in nn_answer.loss_values.items()}
+    result_test_epoch_losses = {key: value[nn_answer.min_test_loss_idx] for key, value in nn_answer.loss_values_test.items()}
 
     answer_print_pars = nn_answer.task.to_latex()
 
@@ -95,7 +96,8 @@ def get_output():
                            init_boundary=answer_print_pars['init-boundary'],
                            left_boundary=answer_print_pars['left-boundary'],
                            right_boundary=answer_print_pars['right-boundary'],
-                           losses = last_epoch_losses,
+                           losses = result_epoch_losses,
+                           test_losses = result_test_epoch_losses,
                            error_nn=error_nn,
                            error_fdm=error_fdm,
                            answer = nn_answer.task._expressions)

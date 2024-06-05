@@ -119,19 +119,22 @@ class FDMHeatSolver:
         if self.task.exact_solution is None:
             raise ValueError("There is no exact solution in this problem.")
         
-        points_total = len(self.ts)*len(self.xs)
+        # points_total = len(self.ts)*len(self.xs)
         
-        if average_over_n > points_total:
-            raise ValueError("There is not enough points in FDM discretization.")
+        # if average_over_n > points_total:
+        #     raise ValueError("There is not enough points in FDM discretization.")
 
-        t_check_id = np.random.randint(0, len(self.ts), average_over_n)
-        x_check_id = np.random.randint(0, len(self.xs), average_over_n)
+        # t_check_id = np.random.randint(0, len(self.ts), average_over_n)
+        # x_check_id = np.random.randint(0, len(self.xs), average_over_n)
+        t_check, x_check = torch.meshgrid(self.ts, self.xs, indexing="ij")
+        t_check = t_check.flatten()
+        x_check = x_check.flatten()
+    
 
-        t_check = self.ts[t_check_id]
-        x_check = self.xs[x_check_id]
-
-        y_check = torch.tensor(self.solution[t_check_id, x_check_id])
+        y_check = torch.tensor(self.solution)
         y_GT = self.task.exact_solution(t_check, x_check)
+        y_GT = y_GT.reshape(len(self.ts), len(self.xs))
+
         
         lossL2 = nn.MSELoss()
         lossL1 = nn.L1Loss()

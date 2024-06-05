@@ -1,5 +1,6 @@
 import torch
 from torch import autograd
+import math
 
 
 
@@ -36,6 +37,19 @@ def derivative(xs, ys, order = 1):
         derivatives.append(der)
         
     return derivatives[order]
+
+def get_batch_idx(epoch, batch_size, dataset_size):
+
+    batches_quantity = math.ceil(dataset_size/batch_size)
+    batch_num = epoch % batches_quantity
+
+    start = batch_num*batch_size
+    end = ((batch_num+1)*batch_size) - 1
+
+    if end >= dataset_size:
+        end = dataset_size - 1
+
+    return (start, end)
 
 
 
