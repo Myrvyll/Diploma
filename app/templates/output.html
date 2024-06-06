@@ -22,16 +22,16 @@
         </nav>
 
         <div class="container mt-5">
-            <h1 class="text-center">Калькулятор для параболічних рівнянь</h1>
+            <h1 class="text-center">Калькулятор для параболічних задач</h1>
 
             <div class="card mt-4">
                 <div class="card-body fs-5">
-                    <h5 class="card-title fs-3">Умова рівняння</h5>
+                    <h5 class="card-title fs-3">Умова задачі</h5>
                     <p class="text-left m-3"> \( \frac {\partial u}{\partial t} = {{a}} \frac {\partial^2 u}{\partial x^2}\) </p>
                     <p class="text-left m-3"> \( u(0, x) = {{init_boundary}}\) </p>
-                    <p class="text-left m-3">\( u(t, a) = {{left_boundary}}\) </p>
-                    <p class="text-left m-3"> \( u(t, b) = {{right_boundary}}\) </p>
-                    <p>Межі: 0 ≤ x ≤ L, 0 ≤ t ≤ T</p>
+                    <p class="text-left m-3">\( u(t, {{answer["left-x"]}}) = {{left_boundary}}\) </p>
+                    <p class="text-left m-3"> \( u(t, {{answer["right-x"]}}) = {{right_boundary}}\) </p>
+                    <p>Межі: {{answer["left-x"]}} ≤ x ≤ {{answer["right-x"]}}, 0 ≤ t ≤ {{answer["end-t"]}}</p>
                 </div>
             </div>
 
@@ -59,7 +59,7 @@
             
             <div class="card mt-4">
               <div class="card-body">
-                  <h5 class="card-title">Обрахувати функцію: </h5>
+                  <h5 class="card-title">Обчислити значення функції u(t, x) в заданій точці: </h5>
                   <form method="POST" onkeydown="return event.key != 'Enter';">
                       <div class="row">
                           <div class="col-md-6">
@@ -96,12 +96,12 @@
                         <div class="col-md-4">
                             <p>MSE (Нейронна мережа): {{"{:0.8f}".format(error_nn["MSE"])}}</p>
                             <p>MAE (Нейронна мережа): {{"{:0.8f}".format(error_nn["MAE"])}}</p>
-                            <p>MRAE (Нейронна мережа): {{"{:0.8f}".format(error_nn["MRAE"])}}</p>
+                            <!-- <p>MRAE (Нейронна мережа): {{"{:0.8f}".format(error_nn["MRAE"])}}</p> -->
                         </div>
                         <div class="col">
                             <p>MSE (метод скінченних різниць): {{"{:0.8f}".format(error_fdm["MSE"])}}</p>
                             <p>MAE (метод скінченних різниць): {{"{:0.8f}".format(error_fdm["MAE"])}}</p>
-                            <p>MRAE (метод скінченних різниць): {{"{:0.8f}".format(error_fdm["MRAE"])}}</p>
+                            <!-- <p>MRAE (метод скінченних різниць): {{"{:0.8f}".format(error_fdm["MRAE"])}}</p> -->
                         </div>
                     </div>
                 </div>
@@ -109,12 +109,25 @@
 
             <div class="card mt-4">
               <div class="card-body fs-5">
-                  <h5 class="card-title fs-3">Функція втрат</h5>
-                  <p>Загальна функція втрат: {{"{:0.6f}".format(losses["total_loss"])}}</p>
-                  <p>Функція втрат по внутрішній області: {{"{:0.6f}".format(losses["physics_loss"])}}</p>
-                  <p>Функція втрат по початковій умові: {{"{:0.6f}".format(losses["init_loss"])}}</p>
-                  <p>Функція втрат по лівій крайовій умові: {{"{:0.6f}".format(losses["left_loss"])}}</p>
-                  <p>Функція втрат по правій крайовій умові: {{"{:0.6f}".format(losses["right_loss"])}}</p>
+                    <div class = "row">
+                        <div class = "col">
+                            <h5 class="card-title fs-3">Функція втрат на тренувальному наборі</h5>
+                            <p>Загальна функція втрат: {{"{:0.6f}".format(losses["total_loss"])}}</p>
+                            <p>Функція втрат по внутрішній області: {{"{:0.6f}".format(losses["physics_loss"])}}</p>
+                            <p>Функція втрат по початковій умові: {{"{:0.6f}".format(losses["init_loss"])}}</p>
+                            <p>Функція втрат по лівій крайовій умові: {{"{:0.6f}".format(losses["left_loss"])}}</p>
+                            <p>Функція втрат по правій крайовій умові: {{"{:0.6f}".format(losses["right_loss"])}}</p>
+                        </div>
+
+                        <div class = "col">
+                            <h5 class="card-title fs-3">Функція втрат на тестовому наборі</h5>
+                            <p>Загальна функція втрат: {{"{:0.6f}".format(test_losses["total_loss"])}}</p>
+                            <p>Функція втрат по внутрішній області: {{"{:0.6f}".format(test_losses["physics_loss"])}}</p>
+                            <p>Функція втрат по початковій умові: {{"{:0.6f}".format(test_losses["init_loss"])}}</p>
+                            <p>Функція втрат по лівій крайовій умові: {{"{:0.6f}".format(test_losses["left_loss"])}}</p>
+                            <p>Функція втрат по правій крайовій умові: {{"{:0.6f}".format(test_losses["right_loss"])}}</p>
+                        </div>
+                    </div>
               </div>
           </div>
 
