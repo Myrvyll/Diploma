@@ -104,11 +104,15 @@ class NNHeatSolver:
 
     def generate_data(self, task: problem.Heat, quantities=(100, 50, 10, 10)):
         
+        # t_train_inner_un = torch.rand(quantities[0]) * (task.end_t - task.start_t) + task.start_t
+        # m = torch.distributions.Exponential(torch.tensor([7.0]))
+        # t_train_inner_exp = m.rsample(torch.Size([quantities[0]])).squeeze()
         t_train_inner_un = torch.rand(quantities[0]) * (task.end_t - task.start_t) + task.start_t
 
         # self.t_train_inner = torch.cat([t_train_inner_exp, t_train_inner_un])
         # self.t_train_inner = t_train_inner_exp
         self.train_data['t_inner'] = t_train_inner_un
+        # self.train_data['t_inner'] = t_train_inner_exp
         self.train_data['x_inner'] = torch.rand(quantities[0]) * (task.right_x - task.left_x) + task.left_x
 
         # data in init
@@ -171,7 +175,7 @@ class NNHeatSolver:
                 self.train_data[data_name] = self.train_data[data_name][indices]
 
         
-    def fit(self, task: problem.Heat, epochs=5000, batch_size = (100, 25, 15, 15)):
+    def fit(self, task: problem.Heat, epochs=6000, batch_size = (250, 100, 30, 30)):
 
         self.task = task
         phys_loss_fn = physics_loss.PhysicsLoss()
@@ -233,6 +237,9 @@ class NNHeatSolver:
             total_loss = phys_loss + 75*init_loss + left_loss + right_loss
             loss_values['total_loss'].append(total_loss.item())
 
+            # if total_loss < optim_test_loss:
+            #     optim_state_dict = copy.deepcopy(self.network.state_dict())
+            #     optim_test_loss = total_loss
 
             total_loss.backward()
 
@@ -268,12 +275,12 @@ class NNHeatSolver:
             if total_loss < optim_test_loss:
                 optim_state_dict = copy.deepcopy(self.network.state_dict())
                 optim_test_loss = total_loss
-                self.shuffle_data()
 
 
             # self.generate_data(task)
 
             if epoch % (epochs / 10) == 0:
+                self.shuffle_data()
                 logger.info(f'{epoch}/{epochs} Test |Loss phys: {phys_loss:.8f} | loss left: {left_loss:.8f} | loss right: {right_loss:.8f} | loss init: {init_loss:.8f} | Total: {total_loss:.8f}')
         
         
