@@ -16,12 +16,31 @@ formatter = logging.Formatter('%(asctime)s:%(filename)s:%(levelname)s:\n%(messag
 logger = logging.getLogger("solver_fdm")
 
 class FDMHeatSolver:
+    """
+    Class to solve the heat equation using the Finite Difference Method (FDM).
+    """
     def __init__(self, task:problem.Heat):
+        """
+        Initializes the FDMHeatSolver class.
+
+        Args:
+            task (Heat): An instance of the Heat class representing the heat equation problem.
+        """
         self.task = task
         self.ts = None
         self.xs = None
 
     def solve(self, t_n, x_n):
+        """
+        Solves the heat equation using the Crank-Nicolson method.
+
+        Args:
+            t_n (int): Number of time steps.
+            x_n (int): Number of spatial steps.
+        
+        Returns:
+            None
+        """
 
         self.ts = torch.linspace(self.task.start_t, self.task.end_t, t_n)
         self.xs = torch.linspace(self.task.left_x, self.task.right_x, x_n)
@@ -37,8 +56,7 @@ class FDMHeatSolver:
     
         if F > 0.5:
             logger.warning("It is not recommended to use dt, dx such that f > 1/2")
-            # raise ValueError(f"F > 0.5, f = {F}")
-            # return
+
     
         u0 = self.task.initial_condition(0, self.xs)
         # logger.debug(u0)
@@ -88,6 +106,15 @@ class FDMHeatSolver:
         self.solution = u_approximated
 
     def plot(self, path):
+        """
+        Plots the computed solution and saves the plots to the specified path.
+
+        Args:
+            path (str): The path where the plot images will be saved.
+        
+        Returns:
+            None
+        """
 
         plt.tight_layout()
     
@@ -108,24 +135,25 @@ class FDMHeatSolver:
             axes.set_ylabel("T")
             fig.savefig(path + f"{angle}")
             plt.close()
-        # for xs in ys_to_plot:
-        #     line = axes.plot(x_train_1d, xs)
-        #     # line[0].set_color(color)
-        # axes.set_zlim(-1, 1)
-        # axes.set_ylim(-1, 1)
+
 
     def count_metrics(self, average_over_n):
+        """
+        Calculates error metrics (MSE, MAE) for the computed solution against the exact solution.
+
+        Args:
+            average_over_n (int): Number of points over which to average the error metrics.
+        
+        Returns:
+            dict: A dictionary containing the calculated MSE, MAE.
+        
+        Raises:
+            ValueError: If the exact solution is not provided in the Heat problem instance.
+        """
         
         if self.task.exact_solution is None:
             raise ValueError("There is no exact solution in this problem.")
-        
-        # points_total = len(self.ts)*len(self.xs)
-        
-        # if average_over_n > points_total:
-        #     raise ValueError("There is not enough points in FDM discretization.")
 
-        # t_check_id = np.random.randint(0, len(self.ts), average_over_n)
-        # x_check_id = np.random.randint(0, len(self.xs), average_over_n)
         t_check, x_check = torch.meshgrid(self.ts, self.xs, indexing="ij")
         t_check = t_check.flatten()
         x_check = x_check.flatten()
