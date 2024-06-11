@@ -351,11 +351,7 @@ class NNHeatSolver:
             axes.set_ylabel("T")
             fig.savefig(path + f"{angle}")
             plt.close()
-        # for xs in ys_to_plot:
-        #     line = axes.plot(x_train_1d, xs)
-        #     # line[0].set_color(color)
-        # axes.set_zlim(-1, 1)
-        # axes.set_ylim(-1, 1)
+
 
     def plot_loss(self, path):
 
@@ -407,35 +403,8 @@ class NNHeatSolver:
         mrae = (mrae.sum())/n_points
 
         return {'MSE': mse.item(),
-                'MAE': mae.item(),
-                'MRAE': mrae.item()}
-    
-    # def count_metrics_on_grid(self, xs, ts):
-        
-    #     if self.task.exact_solution is None:
-    #         raise ValueError("There is no exact solution in this problem.")
+                'MAE': mae.item()}
 
-    #     t_check = torch.rand(n_points) * (self.task.end_t - self.task.start_t) + self.task.start_t
-    #     x_check = torch.rand(n_points) * (self.task.right_x - self.task.left_x) + self.task.left_x
-
-    #     y_check = self.predict(t_check, x_check)
-
-    #     y_GT = self.task.exact_solution(t_check, x_check)
-
-    #     lossL2 = nn.MSELoss()
-    #     lossL1 = nn.L1Loss()
-
-    #     mse = lossL2(y_check, y_GT)
-    #     mae = lossL1(y_check, y_GT)
-
-    #     mrae = ((y_check - y_GT).abs())/(y_GT.abs())
-    #     mask = torch.isnan(mrae)
-    #     mrae[mask] = y_check[mask]
-    #     mrae = (mrae.sum())/n_points
-
-    #     return {'MSE': mse.item(),
-    #             'MAE': mae.item(),
-    #             'MRAE': mrae.item()}
 
 
 
