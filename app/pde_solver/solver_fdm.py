@@ -176,5 +176,4 @@ class FDMHeatSolver:
         mrae = (mrae.sum())/average_over_n
 
         return {'MSE': mse.item(),
-                'MAE': mae.item(),
-                'MRAE': mrae.item()}
+                'MAE': mae.item()}
