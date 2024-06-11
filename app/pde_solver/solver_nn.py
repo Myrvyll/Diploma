@@ -33,7 +33,18 @@ logger.addHandler(ch)
 # logger.addHandler(file_handler)
 
 class NNHeatSolver:
+    """
+    A neural network-based solver for heat equation problems.
+    """
     def __init__(self, network: nn.Module, optimizer: torch.optim.Optimizer, loss: torch.nn.Module):
+        """
+        Initializes the NNHeatSolver with a neural network, optimizer, and loss function.
+
+        Args:
+            network (nn.Module): The neural network model.
+            optimizer (torch.optim.Optimizer): The optimizer for training the neural network.
+            loss (torch.nn.Module): The loss function to use.
+        """
         self.network = network
         self.optimizer = optimizer
         self.loss_for_sp = loss
@@ -76,9 +87,12 @@ class NNHeatSolver:
         self.y_max = None
 
     def generate_test_data(self, task: problem.Heat):
-        
-        # m = torch.distributions.Exponential(torch.tensor([7.0]))
-        # t_train_inner_exp = m.rsample(torch.Size([60])).squeeze()
+        """
+        Generate test data for the heat equation problem.
+
+        Args:
+            task (problem.Heat): The heat equation problem instance.
+        """
         t_train_inner_un = torch.rand(100) * (task.end_t - task.start_t) + task.start_t
 
         # self.t_train_inner = torch.cat([t_train_inner_exp, t_train_inner_un])
@@ -103,7 +117,14 @@ class NNHeatSolver:
 
 
     def generate_data(self, task: problem.Heat, quantities=(100, 50, 10, 10)):
-        
+        """
+        Generate training data for the heat equation problem.
+
+        Args:
+            task (problem.Heat): The heat equation problem instance.
+            quantities (tuple): A tuple containing the number of data points to generate for the inner area,
+                                initial condition, left boundary, and right boundary.
+        """
         # t_train_inner_un = torch.rand(quantities[0]) * (task.end_t - task.start_t) + task.start_t
         # m = torch.distributions.Exponential(torch.tensor([7.0]))
         # t_train_inner_exp = m.rsample(torch.Size([quantities[0]])).squeeze()
@@ -137,11 +158,29 @@ class NNHeatSolver:
         self.y_max = torch.max(all_y_values)
 
     def rescale_output(self, y_normalized):
-        # Rescale the output back to the original scale
+        """
+        Rescale the network output back to the original scale.
+
+        Args:
+            y_normalized (torch.Tensor): The normalized output from the neural network.
+
+        Returns:
+            torch.Tensor: The rescaled output.
+        """
         return y_normalized * (self.y_max - self.y_min) + self.y_min
     
     def get_batch(self, epoch, batch_sizes):
+        """
+        Get a batch of data for the current epoch.
 
+        Args:
+            epoch (int): The current epoch number.
+            batch_sizes (tuple): The sizes of batches to extract for inner area, initial condition,
+                                 left boundary, and right boundary.
+
+        Returns:
+            dict: A dictionary containing batches of training data.
+        """
         batch = {'t_inner': batch_sizes[0],    # data in inner area
                   'x_inner': batch_sizes[0],
                   'x_init': batch_sizes[1],    # data in init
@@ -164,7 +203,9 @@ class NNHeatSolver:
         return batch
     
     def shuffle_data(self):
-
+        """
+        Shuffle the training data for better generalization during training.
+        """
         names = [['x_inner', 't_inner'], ['x_init', 't_init', 'y_init'],
                  ['x_left', 't_left', 'y_left'], ['x_right', 't_right', 'y_right']]
         
@@ -176,7 +217,15 @@ class NNHeatSolver:
 
         
     def fit(self, task: problem.Heat, epochs=6000, batch_size = (250, 100, 30, 30)):
+        """
+        Train the neural network to solve the heat equation problem.
 
+        Args:
+            task (problem.Heat): The heat equation problem instance.
+            epochs (int, optional): The number of training epochs. Defaults to 6000.
+            batch_size (tuple, optional): The sizes of batches for inner area, initial condition,
+                                          left boundary, and right boundary. Defaults to (250, 100, 30, 30).
+        """
         self.task = task
         phys_loss_fn = physics_loss.PhysicsLoss()
 
@@ -304,7 +353,20 @@ class NNHeatSolver:
         # logger.info(self.network.state_dict())
 
     def predict_in_training(self, t, x):
-
+        """
+        Predicts the output during training, with normalization for gradient calculation.
+    
+        This method normalizes the input time and space data, uses the neural network to
+        predict the output, rescales the output back to the original scale, and ensures
+        that the normalization is considered during gradient calculation.
+    
+        Args:
+            t (torch.Tensor): The time values for which to make predictions.
+            x (torch.Tensor): The space values for which to make predictions.
+    
+        Returns:
+            torch.Tensor: The predicted output values, rescaled to the original scale.
+        """
         x = (x - self.task.left_x) / (self.task.right_x - self.task.left_x)
         t = (t - self.task.start_t) / (self.task.end_t - self.task.start_t)
         ys_normalized = self.network(t, x)
@@ -314,7 +376,16 @@ class NNHeatSolver:
 
 
     def predict(self, t, x):
+        """
+        Make predictions using the trained neural network.
 
+        Args:
+            t (torch.Tensor): The time values for prediction.
+            x (torch.Tensor): The spatial values for prediction.
+
+        Returns:
+            torch.Tensor: The predicted values.
+        """
         self.network.eval()
         with torch.inference_mode():
 
@@ -327,7 +398,9 @@ class NNHeatSolver:
             return ys
     
     def plot(self, path):
-
+        """
+        Plot the predicted solution of the heat equation.
+        """
         plt.tight_layout()
         mesh = 1000
     
@@ -354,7 +427,16 @@ class NNHeatSolver:
 
 
     def plot_loss(self, path):
-
+        """
+        Plots the training and test loss values along with the learning rates.
+    
+        This method generates a plot of the physics loss, initialization loss, left boundary loss,
+        right boundary loss, total loss for both training and test datasets, and the learning rates
+        over epochs.
+    
+        Args:
+            path (str): The file path where the plot image will be saved.
+        """
         fig, axes = plt.subplots(2, 3, figsize=(12, 8))
 
         indexes = [[0, 0], [0, 1], [1, 0], [1, 1], [0, 2]]
@@ -372,7 +454,21 @@ class NNHeatSolver:
         # plt.close()
 
     def count_metrics(self, n_points, ts = None, xs = None):
-
+        """
+        Calculates the MSE and MAE metrics by comparing predictions with the exact solution.
+    
+        This method generates random or specified test points, makes predictions using the 
+        trained network, compares these predictions with the exact solution, and computes 
+        the Mean Squared Error (MSE) and Mean Absolute Error (MAE).
+    
+        Args:
+            n_points (int): The number of points to generate if `ts` and `xs` are not provided.
+            ts (torch.Tensor, optional): Specific time points for evaluation.
+            xs (torch.Tensor, optional): Specific spatial points for evaluation.
+    
+        Returns:
+            dict: A dictionary containing the MSE and MAE metrics.
+        """
         t_check = None
         x_check = None
         
