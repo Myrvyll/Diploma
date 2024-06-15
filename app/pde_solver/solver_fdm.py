@@ -57,8 +57,8 @@ class FDMHeatSolver:
         if F > 0.5:
             logger.warning("It is not recommended to use dt, dx such that f > 1/2")
 
-    
-        u0 = self.task.initial_condition(0, self.xs)
+        init_t = torch.full_like(self.xs, self.task.start_t)
+        u0 = self.task.initial_condition(init_t, self.xs)
         # logger.debug(u0)
     
         u_p = u0.clone().detach()
