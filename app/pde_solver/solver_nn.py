@@ -440,12 +440,13 @@ class NNHeatSolver:
         fig, axes = plt.subplots(2, 3, figsize=(12, 8))
 
         indexes = [[0, 0], [0, 1], [1, 0], [1, 1], [0, 2]]
+        plot_index = list(range(0, len(self.loss_values['init_loss'])))
 
         for (key, value), id in zip(self.loss_values.items(), indexes):
             ax = axes[id[0], id[1]]
             ax.set_title(key)
-            ax.plot(value)
-            ax.plot(self.loss_values_test[key])
+            ax.plot(plot_index[600:], value[600:])
+            ax.plot(plot_index[600:], self.loss_values_test[key][600:])
         
         axes[1][2].plot(self.learning_rates)
         axes[1][2].set_title("Learning rate")
